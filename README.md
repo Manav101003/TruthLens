@@ -1,221 +1,175 @@
-<<<<<<< HEAD
-<p align="center">
-  <img src="https://img.shields.io/badge/TruthLens-v2.0-8b5cf6?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiPjxjaXJjbGUgY3g9IjExIiBjeT0iMTEiIHI9IjgiLz48bGluZSB4MT0iMjEiIHkxPSIyMSIgeDI9IjE2LjY1IiB5Mj0iMTYuNjUiLz48L3N2Zz4=&labelColor=1e1e2e" alt="TruthLens v2.0"/>
-  <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=white&labelColor=1e1e2e" alt="React"/>
-  <img src="https://img.shields.io/badge/Node.js-Express-339933?style=for-the-badge&logo=nodedotjs&logoColor=white&labelColor=1e1e2e" alt="Node.js"/>
-  <img src="https://img.shields.io/badge/Python-LangGraph-3776AB?style=for-the-badge&logo=python&logoColor=white&labelColor=1e1e2e" alt="Python"/>
-</p>
+# TruthLens — Hallucination Audit System
 
-# 🔍 TruthLens — Hallucination Audit System
+## Overview
 
-**TruthLens** is a self-correcting agentic verification suite that detects factual hallucinations in LLM-generated text. It cross-references every claim against Wikipedia, Wikidata, CrossRef, and web sources to produce a verified audit report.
+TruthLens is a veracity analysis system designed to detect and evaluate hallucinations in AI-generated content. It processes textual input, extracts factual claims, verifies them against reliable knowledge sources, and produces a structured audit report.
+
+The system classifies claims into verified, unverified, and hallucinated categories while assigning confidence scores based on source agreement and semantic consistency.
 
 ---
 
-## ✨ Features
+## Problem Statement
 
-| Feature | Description |
-|---------|-------------|
-| **Standard Mode** | Fast deterministic verification via Wikipedia & CrossRef |
-| **Agent Mode** | LLM-powered 4-node LangGraph pipeline (Miner → Researcher → Auditor → Fixer) |
-| **Atomic Claim Splitting** | Breaks complex sentences into independently verifiable facts |
-| **Semantic Matching** | Fuzzy matching with synonym support, bigram similarity & numeric tolerance |
-| **Multi-Source Consensus** | Aggregates evidence from 5+ sources before classifying claims |
-| **Document Upload** | Supports PDF, DOCX, TXT files up to 10MB |
-| **PDF Report Export** | Download a full audit trail as a formatted PDF |
-| **Live Agent Path** | Visual thinking-step trace showing the agent's decision process |
+Large Language Models (LLMs) are known to generate incorrect or fabricated information, including false facts and non-existent citations. This lack of reliability presents a significant challenge in domains that require factual accuracy.
+
+TruthLens addresses this issue by providing a transparent and systematic verification pipeline.
 
 ---
 
-## 📁 Project Structure
+## Key Features
 
-```
-TruthLens/
-├── frontend/                 # React 19 + Vite + TailwindCSS
-│   ├── src/
-│   │   ├── components/       # UI components (InputPanel, AuditSummary, etc.)
-│   │   ├── api/              # API client functions
-│   │   ├── utils/            # Report generator, helpers
-│   │   ├── App.jsx           # Main application
-│   │   └── index.css         # Design system
-│   ├── package.json
-│   └── vite.config.js
-│
-├── backend/                  # Node.js + Express API
-│   ├── services/             # Core verification pipeline
-│   │   ├── claimExtraction.js    # NLP sentence segmentation
-│   │   ├── verification.js       # Wikipedia matching + semantic scoring
-│   │   ├── scoring.js            # Confidence calculation & classification
-│   │   ├── atomicSplitter.js     # Complex sentence decomposition
-│   │   ├── semanticMatcher.js    # Fuzzy matching engine
-│   │   ├── multiSourceVerifier.js # Cross-source consensus
-│   │   ├── citationVerifier.js   # Ghost citation detection
-│   │   └── audit.js              # Pipeline orchestrator
-│   ├── integrations/         # External API connectors
-│   │   ├── wikipedia.js
-│   │   ├── wikidata.js
-│   │   ├── crossRefClaims.js
-│   │   ├── googleSearch.js
-│   │   └── newsapi.js
-│   ├── server.js             # Express server entry
-│   ├── package.json
-│   └── .env.example
-│
-├── agent/                    # Python LangGraph Agent
-│   ├── graph/
-│   │   ├── nodes/            # LangGraph nodes
-│   │   │   ├── miner.py          # Claim extraction via Node.js API
-│   │   │   ├── researcher.py     # Evidence gathering
-│   │   │   ├── auditor.py        # LLM-powered fact auditing
-│   │   │   └── fixer.py          # Hallucination rewriter
-│   │   └── tools/            # Agent tools
-│   │       ├── truthlens_api.py  # Node.js API connector
-│   │       └── serper_search.py  # Web search tool
-│   ├── models/
-│   │   └── llm.py            # Multi-provider LLM config
-│   ├── main.py               # FastAPI server entry
-│   ├── requirements.txt
-│   └── .env.example
-│
-├── .gitignore
-└── README.md
-```
+* Atomic claim extraction from complex text
+* Multi-source verification using trusted knowledge bases
+* Detection of hallucinated or misleading statements
+* Citation and DOI validation
+* Confidence scoring based on verification results
+* Dual-mode operation:
+
+  * Standard Mode for deterministic verification
+  * Agent Mode for enhanced reasoning using LLMs
+* Structured report generation for analysis and presentation
 
 ---
 
-## 🚀 Quick Start
+## System Architecture
 
-### Prerequisites
+The system follows a multi-stage verification pipeline:
 
-- **Node.js** ≥ 18.x
-- **Python** ≥ 3.10
-- **npm** ≥ 9.x
-- A free **Groq API key** ([console.groq.com](https://console.groq.com)) for Agent mode
+### 1. Claim Extraction
 
-### 1. Clone the Repository
+Text is segmented into smaller, verifiable factual statements using natural language processing techniques.
+
+### 2. Verification Engine
+
+Each claim is cross-checked against reliable sources such as Wikipedia and other public knowledge bases.
+
+### 3. Citation and Consistency Analysis
+
+References, URLs, and DOIs are validated to detect fabricated or invalid citations.
+
+---
+
+## Technology Stack
+
+### Frontend
+
+* React.js (Vite)
+* Tailwind CSS
+
+### Backend
+
+* Node.js
+* Express.js
+
+### Agent Layer
+
+* Python
+* LangGraph
+* Groq API (Llama 3.1 70B)
+
+### External Integrations
+
+* Wikipedia API
+* Wikidata
+* DuckDuckGo Instant Answers
+* CrossRef API
+
+### Database (Optional)
+
+* Supabase (PostgreSQL)
+
+---
+
+## Installation and Setup
+
+### 1. Clone Repository
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/TruthLens.git
 cd TruthLens
 ```
 
+---
+
 ### 2. Backend Setup
 
 ```bash
 cd backend
-cp .env.example .env          # Edit with your keys (optional)
 npm install
-npm start                     # Runs on http://localhost:5000
+npm run dev
 ```
 
-### 3. Frontend Setup
+---
+
+### 3. Agent Setup
+
+```bash
+cd agent
+pip install -r requirements.txt
+python main.py
+```
+
+---
+
+### 4. Frontend Setup
 
 ```bash
 cd frontend
 npm install
-npm run dev                   # Runs on http://localhost:5173
+npm run dev
 ```
 
-### 4. Agent Setup (Optional — for Agent Mode)
-
-```bash
-cd agent
-cp .env.example .env          # Add your Groq API key
-pip install -r requirements.txt
-python main.py                # Runs on http://localhost:8000
-```
-
-### 5. Open the App
-
-Navigate to **http://localhost:5173** in your browser.
-
 ---
 
-## ⚙️ Configuration
+## Environment Variables
 
-### Backend (`backend/.env`)
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `PORT` | No | Server port (default: 5000) |
-| `SUPABASE_URL` | No | Supabase project URL for persistence |
-| `SUPABASE_ANON_KEY` | No | Supabase anonymous key |
-| `TRUTHLENS_DEBUG` | No | Set `true` for verbose logging |
-
-### Agent (`agent/.env`)
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `GROQ_API_KEY` | **Yes** | Groq API key for LLM calls |
-| `LLM_PROVIDER` | No | `groq`, `openai`, or `google` (default: groq) |
-| `LLM_MODEL` | No | Model name (default: llama-3.3-70b-versatile) |
-| `SERPER_API_KEY` | No | Serper.dev key for web search |
-
----
-
-## 🏗️ Architecture
+### Backend
 
 ```
-┌─────────────┐     ┌──────────────┐     ┌─────────────┐
-│   Frontend   │────▶│   Backend    │────▶│  Wikipedia   │
-│  React/Vite  │     │  Express.js  │     │  Wikidata    │
-│  :5173       │     │  :5000       │     │  CrossRef    │
-└─────────────┘     └──────┬───────┘     └─────────────┘
-                           │
-                    ┌──────▼───────┐
-                    │    Agent     │
-                    │  LangGraph   │
-                    │  FastAPI     │
-                    │  :8000       │
-                    └──────────────┘
+PORT=5000
 ```
 
-**Standard Mode**: Frontend → Backend → Wikipedia/Wikidata/CrossRef → Scored Results
+### Agent
 
-**Agent Mode**: Frontend → Backend → Agent (Miner → Researcher → Auditor → Fixer) → Enhanced Results
-
----
-
-## 📊 Verification Pipeline
-
-1. **Extraction** — NLP-based sentence segmentation with factual claim filtering
-2. **Atomic Splitting** — Complex sentences decomposed into independently verifiable atoms
-3. **Verification** — Each claim matched against Wikipedia using semantic + keyword matching
-4. **Scoring** — Confidence calculated from entity match, topic presence, and match ratio
-5. **Multi-Source** — Cross-referenced with Wikidata, CrossRef, Google, and NewsAPI
-6. **Classification** — Claims classified as ✅ Verified, ⚠️ Unverified, or ❌ Hallucinated
+```
+GROQ_API_KEY=your_api_key_here
+```
 
 ---
 
-## 🧪 API Endpoints
+## Usage
 
-### Backend (`:5000`)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/v1/health` | Health check |
-| `POST` | `/api/v1/analyze` | Analyze text (Standard mode) |
-| `POST` | `/api/v1/upload` | Upload document for analysis |
-
-### Agent (`:8000`)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/agent/analyze` | Run full agentic pipeline |
-| `GET` | `/health` | Agent health check |
+1. Launch all services (frontend, backend, agent)
+2. Open the application in the browser
+3. Input AI-generated text
+4. Run analysis
+5. Review classification results and confidence scores
 
 ---
 
-## 👥 Team
+## Limitations
 
-**Team ExWhyZed**
+* Accuracy depends on availability and consistency of external data sources
+* Complex or highly descriptive text may require improved claim extraction
+* Agent mode may be affected by API rate limits
 
 ---
 
-## 📄 License
+## Future Enhancements
 
-This project is built for the hackathon. All rights reserved.
-=======
-# VerityLens
-VerityLens is a Veracity Forensic Suite that audits AI-generated content, detects hallucinations, verifies claims using multiple trusted sources, and generates structured trust reports with confidence scoring.
->>>>>>> f5d06257ca8439d0daa6a614416f82075e6d7d71
+* Integration of additional trusted data sources
+* Improved semantic matching and tolerance handling
+* Browser extension for real-time verification
+* Enterprise-grade reporting dashboard
+
+---
+
+## License
+
+This project is licensed under the MIT License.
+
+---
+
+## Conclusion
+
+TruthLens provides a structured and transparent approach to verifying AI-generated content. It enables users to critically assess the reliability of generated information and supports responsible AI usage.
