@@ -1,0 +1,49 @@
+# ===== Node.js =====
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# ===== Environment =====
+.env
+.env.local
+.env.*.local
+
+# ===== Build Output =====
+frontend/dist/
+frontend/build/
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# ===== IDE =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ===== Logs =====
+logs/
+*.log
+
+# ===== Temp Files =====
+srs_temp/
+extract_srs.py
+srs_full_text.txt
+TruthLens_SRS_v1.docx
+TruthLens_SRS_v1.zip
