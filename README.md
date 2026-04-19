@@ -1,4 +1,4 @@
-# TruthLens — Hallucination Audit System
+# VerityLens — Hallucination Audit System
 
 ## Overview
 
