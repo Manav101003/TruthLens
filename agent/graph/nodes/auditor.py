@@ -137,33 +137,31 @@ async def auditor_node(state: dict) -> dict:
             updates.update(_log({**state, **updates}, "auditor",
                 f"JSON parse failed (batch {batch_idx+1}): {str(e)[:60]}. Using heuristic."))
             for claim in claim_batch:
-                # Fallback: use existing status/confidence if available, otherwise inconclusive
+                # Fallback: LLM failed to parse — mark as inconclusive (NOT verified)
                 existing_status = claim.get("status", "inconclusive")
-                existing_conf = claim.get("confidence") or 0.65  # Default to verified-range confidence
                 if existing_status == "non_verifiable":
                     continue  # Skip non-verifiable
                 all_verdicts.append({
                     "claim_index": claim.get("id", 0) - 1,
-                    "status": "verified" if existing_conf >= 0.60 else "inconclusive",
-                    "confidence": existing_conf,
-                    "reasoning": "LLM response parsing failed — using evidence-based heuristic. Claim not contradicted.",
-                    "refined_query": claim.get("text", "")[:80] if existing_conf < CONFIDENCE_THRESHOLD else "",
+                    "status": "inconclusive",
+                    "confidence": 0.45,
+                    "reasoning": "LLM response parsing failed — claim needs manual review.",
+                    "refined_query": claim.get("text", "")[:80],
                 })
 
         except Exception as e:
             updates.update(_log({**state, **updates}, "auditor",
                 f"LLM call failed (batch {batch_idx+1}): {str(e)[:80]}. Using heuristic."))
             for claim in claim_batch:
-                # Fallback: give verified-range scores when LLM is unavailable
+                # Fallback: LLM unavailable — mark as inconclusive (NOT verified)
                 existing_status = claim.get("status", "inconclusive")
-                existing_conf = claim.get("confidence") or 0.65
                 if existing_status == "non_verifiable":
                     continue
                 all_verdicts.append({
                     "claim_index": claim.get("id", 0) - 1,
-                    "status": "verified" if existing_conf >= 0.60 else "inconclusive",
-                    "confidence": existing_conf,
-                    "reasoning": f"LLM unavailable ({str(e)[:40]}) — claim not contradicted by any source.",
+                    "status": "inconclusive",
+                    "confidence": 0.45,
+                    "reasoning": f"LLM unavailable ({str(e)[:40]}) — claim needs manual review.",
                     "refined_query": "",
                 })
 

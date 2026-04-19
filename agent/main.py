@@ -131,6 +131,39 @@ async def agent_analyze(req: AnalyzeRequest):
         audit_results = final_state.get("audit_results", [])
         fixed_claims = final_state.get("fixed_claims", [])
 
+        # Check if ALL audit results are inconclusive (LLM was completely unavailable)
+        factual_audits = [ar for ar in audit_results if ar.get("status") != "non_verifiable"]
+        all_inconclusive = len(factual_audits) > 0 and all(
+            ar.get("status") == "inconclusive" for ar in factual_audits
+        )
+
+        if all_inconclusive:
+            # LLM was unavailable — fall back to Standard mode (Wikipedia-based verification)
+            try:
+                from graph.tools.truthlens_api import call_analyze
+                standard_result = await call_analyze(req.text, req.user_tier)
+                if standard_result and standard_result.get("claims"):
+                    # Use Standard mode results directly, add agent metadata
+                    std_claims = standard_result["claims"]
+                    std_summary = standard_result.get("summary", {})
+                    std_summary["llm_fallback"] = True
+                    return {
+                        "session_id": standard_result.get("session_id"),
+                        "created_at": datetime.now(timezone.utc).isoformat(),
+                        "summary": std_summary,
+                        "claims": std_claims,
+                        "citations": standard_result.get("citations", []),
+                        "capped": standard_result.get("capped", False),
+                        "thinking_log": final_state.get("thinking_log", []) + [
+                            {"step": 99, "node": "fallback", "action": "LLM unavailable — using Standard mode verification results", "detail": "", "ts": datetime.now(timezone.utc).isoformat()}
+                        ],
+                        "fixed_claims": [],
+                        "iterations_used": final_state.get("current_iteration", 0),
+                        "agent_mode": True,
+                    }
+            except Exception:
+                pass  # Standard mode also failed — continue with inconclusive results
+
         # Merge audit verdicts back into claims (skip non_verifiable)
         for ar in audit_results:
             idx = ar.get("claim_index", 0)
@@ -147,7 +180,7 @@ async def agent_analyze(req: AnalyzeRequest):
                     mapped_status = "verified"
                 elif raw_status == "hallucinated":
                     mapped_status = "hallucinated"
-                elif raw_status == "inconclusive" and conf >= 0.60:
+                elif raw_status == "inconclusive" and conf >= 0.55:
                     mapped_status = "verified"  # High enough confidence = verified
                 else:
                     mapped_status = "unverified"
@@ -160,9 +193,9 @@ async def agent_analyze(req: AnalyzeRequest):
                 # Update confidence label (matches scoring.js thresholds)
                 if conf >= 0.80:
                     claims[idx]["confidence_label"] = "High Confidence"
-                elif conf >= 0.60:
+                elif conf >= 0.55:
                     claims[idx]["confidence_label"] = "Verified"
-                elif conf >= 0.35:
+                elif conf >= 0.30:
                     claims[idx]["confidence_label"] = "Medium Confidence"
                 else:
                     claims[idx]["confidence_label"] = "Low Confidence"

@@ -32,3 +32,19 @@ async def health_check() -> bool:
             return resp.status_code == 200
     except Exception:
         return False
+
+
+async def call_analyze(text: str, user_tier: str = "enterprise") -> dict:
+    """
+    Call the full Node.js /api/v1/analyze endpoint (Standard mode).
+    Used as a fallback when the LLM agent is unavailable.
+    Returns the complete audit with claims, summary, and citations.
+    """
+    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+        response = await client.post(
+            f"{TRUTHLENS_URL}/api/v1/analyze",
+            json={"text": text, "userTier": user_tier},
+            headers={"Content-Type": "application/json"},
+        )
+        response.raise_for_status()
+        return response.json()

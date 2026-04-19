@@ -247,11 +247,11 @@ async function verifyClaim(claim) {
       wikiResult.extract.toLowerCase().includes(e.toLowerCase())
     );
   }
-  // Also check if the Wikipedia article title relates to our claim
-  if (!entityFound && wikiResult.title) {
+  // Also check if the Wikipedia article title directly matches the primary entity
+  if (!entityFound && wikiResult.title && claim.primaryEntity) {
     const titleLower = wikiResult.title.toLowerCase();
-    entityFound = (claim.primaryEntity && titleLower.includes(claim.primaryEntity.toLowerCase())) ||
-                  claim.keywords.some(k => titleLower.includes(k.toLowerCase()));
+    const entityLower = claim.primaryEntity.toLowerCase();
+    entityFound = titleLower.includes(entityLower) || entityLower.includes(titleLower);
   }
 
   // Check for numeric contradictions (existing logic — untouched)
