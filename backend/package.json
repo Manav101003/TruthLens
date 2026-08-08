@@ -8,7 +8,6 @@
     "dev": "node --watch server.js"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.45.0",
     "axios": "^1.7.0",
     "compromise": "^14.13.0",
     "cors": "^2.8.5",
@@ -17,6 +16,7 @@
     "mammoth": "^1.12.0",
     "multer": "^2.1.1",
     "pdf-parse": "^2.4.5",
+    "pg": "^8.22.0",
     "uuid": "^9.0.0"
   }
 }

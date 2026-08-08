@@ -59,7 +59,7 @@ router.post('/extract-claims', async (req, res) => {
  */
 router.post('/analyze', async (req, res) => {
   try {
-    const { text } = req.body;
+    const { text, userEmail } = req.body;
 
     // Validate input (FR-002)
     if (!text || typeof text !== 'string') {
@@ -95,8 +95,8 @@ router.post('/analyze', async (req, res) => {
       });
     }
 
-    // Persist to Supabase (if available)
-    const sessionId = await insertAudit(auditResult);
+    // Persist to Supabase (if available) or local store
+    const sessionId = await insertAudit(auditResult, userEmail);
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`✅ Audit complete in ${elapsed}s — ${auditResult.summary.total_claims} claims analyzed`);
@@ -155,13 +155,33 @@ router.get('/audit/:session_id', async (req, res) => {
 });
 
 /**
+ * GET /api/v1/user/audits — Retrieve recent audits checked by a user
+ */
+router.get('/user/audits', async (req, res) => {
+  try {
+    const userEmail = req.query.email || req.headers['x-user-email'];
+    
+    if (!userEmail) {
+      return res.status(400).json({ error: 'User email is required to fetch audit history.' });
+    }
+    
+    const { getAuditsByUser } = require('../db/queries');
+    const audits = await getAuditsByUser(userEmail);
+    res.json({ audits });
+  } catch (error) {
+    console.error('Fetch user audits error:', error);
+    res.status(500).json({ error: 'Failed to fetch audit history.' });
+  }
+});
+
+/**
  * POST /api/v1/agent-analyze — Run the LangGraph agentic pipeline
  * Proxies to the Python agent service on :8000.
  * Falls back to standard audit if agent is unreachable.
  */
 router.post('/agent-analyze', async (req, res) => {
   try {
-    const { text, userTier, referenceDocument } = req.body;
+    const { text, userTier, referenceDocument, userEmail } = req.body;
 
     if (!text || typeof text !== 'string' || text.trim().length < 50) {
       return res.status(400).json({ error: 'Input text must be at least 50 characters.' });
@@ -187,6 +207,13 @@ router.post('/agent-analyze', async (req, res) => {
       );
 
       console.log(`✅ Agent response received (${agentResponse.data.iterations_used} iterations)`);
+      
+      // Inject input_text for DB insertion
+      agentResponse.data.input_text = text.trim();
+      
+      const sessionId = await insertAudit(agentResponse.data, userEmail);
+      agentResponse.data.session_id = sessionId;
+      
       res.json(agentResponse.data);
 
     } catch (agentError) {

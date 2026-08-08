@@ -49,15 +49,14 @@ function calculateConfidence(keywordMatchRatio, entityFound, hasContradiction, w
  */
 function classifyClaim(confidence, hasContradiction) {
   // Only mark as hallucinated if there's an explicit contradiction
-  if (hasContradiction && confidence < 0.30) {
+  if (hasContradiction) {
     return 'hallucinated';
   }
 
   if (confidence >= 0.55) return 'verified';
   if (confidence >= 0.30) return 'unverified';
 
-  // Even at low confidence, without contradiction it's just "unverified"
-  return hasContradiction ? 'hallucinated' : 'unverified';
+  return 'unverified';
 }
 
 /**

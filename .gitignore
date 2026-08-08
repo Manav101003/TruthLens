@@ -47,3 +47,6 @@ extract_srs.py
 srs_full_text.txt
 TruthLens_SRS_v1.docx
 TruthLens_SRS_v1.zip
+
+hacka/
+backend/db/local_store.json

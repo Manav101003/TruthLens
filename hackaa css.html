@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Veritas — Your model's answers, checked</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #08080B;
+    --bg-2: #101014;
+    --card: #16161B;
+    --line: rgba(255,255,255,0.09);
+    --text: #F2F1EE;
+    --text-soft: rgba(242,241,238,0.62);
+    --text-faint: rgba(242,241,238,0.38);
+    --verified: #3FA672;
+    --verified-bg: rgba(63,166,114,0.12);
+    --uncertain: #D9A441;
+    --uncertain-bg: rgba(217,164,65,0.12);
+    --halluc: #E15B5E;
+    --halluc-bg: rgba(225,91,94,0.12);
+    --radius-s: 8px;
+    --radius-m: 16px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{margin:0; letter-spacing:-0.02em; font-weight:600;}
+  .mono{font-family:'IBM Plex Mono', monospace;}
+  a{color:inherit;}
+  .wrap{max-width:1160px; margin:0 auto; padding:0 32px;}
+
+  @media (prefers-reduced-motion: reduce){ *{animation:none !important; transition:none !important;} }
+
+  /* motion utilities */
+  @keyframes fadeUp{
+    from{opacity:0; transform:translateY(16px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  .hero-anim{opacity:0; animation:fadeUp .7s ease forwards;}
+  .hero-anim.d1{animation-delay:.02s;}
+  .hero-anim.d2{animation-delay:.1s;}
+  .hero-anim.d3{animation-delay:.2s;}
+  .hero-anim.d4{animation-delay:.3s;}
+  .hero-anim.d5{animation-delay:.42s;}
+  .hero-anim.d6{animation-delay:.56s;}
+  .hero-anim.d7{animation-delay:.7s;}
+
+  .reveal{opacity:0; transform:translateY(20px); transition:opacity .6s ease, transform .6s ease;}
+  .reveal.in{opacity:1; transform:translateY(0);}
+  .reveal-stagger.in > *{opacity:1; transform:translateY(0);}
+  .reveal-stagger > *{opacity:0; transform:translateY(18px); transition:opacity .5s ease, transform .5s ease;}
+  .reveal-stagger.in > *:nth-child(1){transition-delay:.05s;}
+  .reveal-stagger.in > *:nth-child(2){transition-delay:.15s;}
+  .reveal-stagger.in > *:nth-child(3){transition-delay:.25s;}
+
+  /* NAV */
+  nav{
+    position:sticky; top:0; z-index:50;
+    background:rgba(8,8,11,0.7);
+    backdrop-filter: blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  nav .wrap{ display:flex; align-items:center; justify-content:space-between; height:60px; }
+  .brand{display:flex; align-items:center; gap:9px; font-weight:600; font-size:15px;}
+  .seal{
+    width:22px; height:22px; border-radius:6px;
+    background:linear-gradient(135deg, var(--verified), var(--uncertain), var(--halluc));
+    display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Mono', monospace; font-size:11px; font-weight:600; color:#08080B;
+    flex-shrink:0;
+  }
+  .navlinks{display:flex; gap:30px; font-size:13.5px; color:var(--text-soft);}
+  .navlinks a{
+    position:relative; text-decoration:none; transition:color .15s ease; padding-bottom:2px;
+  }
+  .navlinks a::after{
+    content:''; position:absolute; left:0; bottom:0; height:1px; width:0;
+    background:var(--text); transition:width .2s ease;
+  }
+  .navlinks a:hover{color:var(--text);}
+  .navlinks a:hover::after{width:100%;}
+  .navright{display:flex; align-items:center; gap:18px;}
+  .navlogin{font-size:13.5px; color:var(--text-soft); text-decoration:none;}
+  .navlogin:hover{color:var(--text);}
+  .navcta{
+    display:flex; align-items:center; gap:7px;
+    font-size:13px; font-weight:500; padding:8px 16px;
+    background:var(--text); color:#08080B; border-radius:8px;
+    text-decoration:none; white-space:nowrap;
+    transition:transform .18s ease, box-shadow .18s ease;
+  }
+  .navcta:hover{transform:translateY(-1px); box-shadow:0 6px 16px rgba(242,241,238,0.15);}
+
+  /* HERO */
+  header.hero{
+    position:relative;
+    padding:150px 0 70px;
+    text-align:center;
+    overflow:hidden;
+    isolation:isolate;
+  }
+  .streaks{
+    position:absolute; inset:0; z-index:-2;
+    background:var(--bg);
+  }
+  .streaks svg{ position:absolute; top:-10%; left:50%; transform:translateX(-50%); width:1400px; height:auto; opacity:0.9; }
+  .hero-fade{
+    position:absolute; inset:0; z-index:-1;
+    background:
+      radial-gradient(ellipse 60% 50% at 50% 10%, transparent 0%, var(--bg) 72%),
+      linear-gradient(to bottom, transparent 0%, var(--bg) 88%);
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace; font-size:12px;
+    color:var(--text-faint); letter-spacing:0.08em; text-transform:uppercase;
+    margin-bottom:20px; display:inline-block;
+  }
+  .hero h1{
+    font-size:56px; line-height:1.08; margin:0 auto 20px; max-width:720px;
+  }
+  .hero-sub{
+    font-size:16.5px; line-height:1.6; color:var(--text-soft);
+    max-width:480px; margin:0 auto 34px;
+  }
+  .hero-actions{display:flex; gap:12px; align-items:center; justify-content:center; flex-wrap:wrap;}
+  .btn-primary{
+    display:flex; align-items:center; gap:8px;
+    background:var(--text); color:#08080B;
+    padding:12px 22px; border-radius:10px; text-decoration:none;
+    font-size:14px; font-weight:600; border:1px solid var(--text);
+    transition:transform .18s ease, box-shadow .18s ease;
+  }
+  .btn-primary:hover{transform:translateY(-2px); box-shadow:0 10px 24px rgba(242,241,238,0.18);}
+  .btn-primary svg{transition:transform .18s ease;}
+  .btn-primary:hover svg{transform:translateY(-1px);}
+  .btn-secondary{
+    display:flex; align-items:center; gap:8px;
+    background:transparent; color:var(--text);
+    padding:12px 22px; border-radius:10px; text-decoration:none;
+    font-size:14px; font-weight:500; border:1px solid var(--line);
+    transition:transform .18s ease, border-color .18s ease, background-color .18s ease;
+  }
+  .btn-secondary:hover{border-color:rgba(255,255,255,0.28); background-color:rgba(255,255,255,0.04); transform:translateY(-2px);}
+  .hero-meta{
+    margin-top:22px; font-family:'IBM Plex Mono', monospace; font-size:12px;
+    color:var(--text-faint);
+  }
+  .hero-meta span{margin:0 10px;}
+  .hero-foot{
+    margin-top:56px; font-size:13.5px; color:var(--text-soft);
+  }
+  .hero-foot a{color:var(--text); text-decoration:underline; text-underline-offset:3px; margin-left:6px;}
+
+  /* MANUSCRIPT DEMO */
+  .manuscript{
+    max-width:760px; margin:56px auto 0; text-align:left;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius-m);
+    padding:26px 26px 22px;
+    position:relative; overflow:hidden;
+  }
+  .manuscript-head{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:16px; font-family:'IBM Plex Mono', monospace; font-size:11px;
+    color:var(--text-faint);
+  }
+  .manuscript-head .dot{width:6px; height:6px; border-radius:50%; background:var(--text-faint); display:inline-block; margin-right:6px;}
+  .m-body{font-size:14.5px; line-height:2.15; color:rgba(242,241,238,0.88);}
+  .claim{
+    border-radius:4px; padding:1px 2px; margin:0 -2px;
+    box-decoration-break:clone; -webkit-box-decoration-break:clone;
+    transition:background-color .2s ease;
+  }
+  .claim:hover{background-color:rgba(255,255,255,0.06);}
+  .claim .tag{
+    display:inline-flex; align-items:center; vertical-align:middle;
+    font-family:'IBM Plex Mono', monospace; font-size:9.5px; font-weight:500;
+    padding:1px 6px; border-radius:4px; white-space:nowrap;
+    margin:0 2px 0 6px;
+    opacity:0; transform:scale(0.85) translateY(2px);
+    transition:opacity .25s ease, transform .25s ease;
+  }
+  .claim.on .tag{opacity:1; transform:scale(1) translateY(0);}
+  .claim.on.v{box-shadow:inset 0 -2px 0 var(--verified);}
+  .claim.on.u{box-shadow:inset 0 -2px 0 var(--uncertain);}
+  .claim.on.h{box-shadow:inset 0 -2px 0 var(--halluc);}
+  .claim.v .tag{background:var(--verified-bg); color:var(--verified);}
+  .claim.u .tag{background:var(--uncertain-bg); color:var(--uncertain);}
+  .claim.h .tag{background:var(--halluc-bg); color:var(--halluc);}
+  .scanline{
+    position:absolute; left:0; right:0; height:2px;
+    background:linear-gradient(90deg, transparent, rgba(255,255,255,0.7) 20%, rgba(255,255,255,0.7) 80%, transparent);
+    opacity:0.4; animation: sweep 3.6s cubic-bezier(.65,0,.35,1) infinite;
+  }
+  @keyframes sweep{
+    0%{top:0%; opacity:0;} 5%{opacity:0.4;} 45%{opacity:0.4;} 50%{top:100%; opacity:0;} 100%{top:100%; opacity:0;}
+  }
+  .m-footer{
+    display:flex; gap:18px; margin-top:18px; padding-top:14px;
+    border-top:1px solid var(--line);
+    font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--text-soft);
+  }
+  .m-footer span{display:flex; align-items:center; gap:6px;}
+  .swatch{width:8px; height:8px; border-radius:2px; display:inline-block;}
+
+  /* SECTIONS */
+  section{padding:90px 0;}
+  .section-head{max-width:560px; margin:0 auto 50px; text-align:center;}
+  .section-head .eyebrow{margin-bottom:14px;}
+  .section-head h2{font-size:32px; line-height:1.2; margin-bottom:14px;}
+  .section-head p{color:var(--text-soft); font-size:15.5px; line-height:1.6;}
+
+  .verdicts{display:grid; grid-template-columns:repeat(3,1fr); gap:18px;}
+  .verdict-card{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius-m);
+    padding:26px 24px; border-top:3px solid;
+    transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+  }
+  .verdict-card:hover{transform:translateY(-5px); box-shadow:0 16px 32px rgba(0,0,0,0.35);}
+  .verdict-card.v:hover{border-color:rgba(63,166,114,0.4);}
+  .verdict-card.u:hover{border-color:rgba(217,164,65,0.4);}
+  .verdict-card.h:hover{border-color:rgba(225,91,94,0.4);}
+  .verdict-card.v{border-top-color:var(--verified);}
+  .verdict-card.u{border-top-color:var(--uncertain);}
+  .verdict-card.h{border-top-color:var(--halluc);}
+  .verdict-card .mono{font-size:11px; letter-spacing:0.05em; text-transform:uppercase; color:var(--text-faint); display:block; margin-bottom:12px;}
+  .verdict-card h3{font-size:18px; margin-bottom:10px; font-weight:600;}
+  .verdict-card p{font-size:14px; line-height:1.6; color:var(--text-soft); margin:0;}
+
+  .how{display:grid; grid-template-columns:repeat(3,1fr); gap:0; border-top:1px solid var(--line);}
+  .how-step{padding:28px 24px 32px; border-right:1px solid var(--line); transition:background-color .2s ease;}
+  .how-step:last-child{border-right:none;}
+  .how-step:hover{background-color:rgba(255,255,255,0.025);}
+  .how-step:hover .num{color:var(--text);}
+  .how-step .num{font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--text-faint); display:block; margin-bottom:14px; transition:color .2s ease;}
+  .how-step h3{font-size:17px; margin-bottom:10px; font-weight:600;}
+  .how-step p{font-size:14px; color:var(--text-soft); line-height:1.6;}
+
+  /* SIGN IN */
+  .signin-section{
+    background:var(--card); border:1px solid var(--line); border-radius:24px;
+    margin:0 32px;
+  }
+  .signin-inner{
+    max-width:1160px; margin:0 auto; padding:76px 32px;
+    display:grid; grid-template-columns:1fr 420px; gap:56px; align-items:center;
+  }
+  .signin-copy h2{font-size:30px; margin-bottom:16px; line-height:1.2;}
+  .signin-copy p{color:var(--text-soft); font-size:15px; line-height:1.65; max-width:400px;}
+  .signin-copy ul{list-style:none; padding:0; margin:26px 0 0; display:flex; flex-direction:column; gap:12px;}
+  .signin-copy li{display:flex; gap:10px; align-items:flex-start; font-size:14px; color:rgba(242,241,238,0.8);}
+  .checkmark{
+    width:16px; height:16px; border-radius:50%; background:var(--verified);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px;
+  }
+  .checkmark svg{width:9px; height:9px;}
+
+  .signin-card{
+    background:var(--bg-2); border:1px solid var(--line);
+    border-radius:var(--radius-m); padding:32px 28px;
+  }
+  .signin-card h3{font-size:20px; margin-bottom:6px; font-weight:600;}
+  .signin-card .sub{font-size:13.5px; color:var(--text-soft); margin-bottom:22px;}
+  .field{margin-bottom:14px;}
+  .field label{font-size:12px; color:var(--text-soft); display:block; margin-bottom:6px; font-family:'IBM Plex Mono', monospace;}
+  .field input{
+    width:100%; padding:11px 14px; border-radius:var(--radius-s);
+    border:1px solid var(--line); background:var(--bg); color:var(--text);
+    font-family:'IBM Plex Sans', sans-serif; font-size:14px;
+  }
+  .field input:focus{outline:2px solid var(--text); outline-offset:1px;}
+  .terms{display:flex; align-items:flex-start; gap:9px; font-size:12.5px; color:var(--text-soft); margin:16px 0 20px;}
+  .terms input{margin-top:2px;}
+  .submit-row{display:flex; align-items:center; justify-content:space-between; gap:12px;}
+  .arrow-btn{
+    width:42px; height:42px; border-radius:50%; background:var(--text); border:none;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
+    transition:transform .18s ease, box-shadow .18s ease;
+  }
+  .arrow-btn:hover{transform:scale(1.08); box-shadow:0 8px 20px rgba(242,241,238,0.2);}
+  .arrow-btn:active{transform:scale(0.96);}
+  .arrow-btn svg{stroke:#08080B; transition:transform .18s ease;}
+  .arrow-btn:hover svg{transform:translateX(2px);}
+  .field input{transition:border-color .18s ease, background-color .18s ease;}
+  .signin-alt{font-size:12.5px; color:var(--text-faint);}
+  .signin-alt a{border-bottom:1px solid currentColor; color:var(--text-soft);}
+
+  footer{padding:56px 0 40px;}
+  .footer-inner{
+    display:flex; justify-content:space-between; align-items:center;
+    border-top:1px solid var(--line); padding-top:28px;
+    font-size:13px; color:var(--text-faint);
+  }
+
+  @media (max-width: 860px){
+    .navlinks{display:none;}
+    .hero h1{font-size:38px;}
+    .verdicts{grid-template-columns:1fr;}
+    .how{grid-template-columns:1fr;}
+    .how-step{border-right:none; border-bottom:1px solid var(--line); padding-bottom:24px; margin-bottom:24px;}
+    .signin-inner{grid-template-columns:1fr; padding:56px 24px;}
+    .signin-section{margin:0 16px; border-radius:18px;}
+    .wrap{padding:0 20px;}
+    header.hero{padding:120px 0 50px;}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand"><span class="seal">V</span> Veritas</div>
+    <div class="navlinks">
+      <a href="#method">Method</a>
+      <a href="#verdicts">Verdicts</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#docs">Docs</a>
+    </div>
+    <div class="navright">
+      <a class="navlogin" href="#signin">Log in</a>
+      <a class="navcta" href="#signin">Run a scan</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="streaks">
+    <svg viewBox="0 0 1400 900" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="blur1" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="38"/>
+        </filter>
+        <linearGradient id="gV" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#3FA672" stop-opacity="0.9"/>
+          <stop offset="100%" stop-color="#3FA672" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="gU" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#D9A441" stop-opacity="0.9"/>
+          <stop offset="100%" stop-color="#D9A441" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="gH" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#E15B5E" stop-opacity="0.9"/>
+          <stop offset="100%" stop-color="#E15B5E" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <g filter="url(#blur1)" transform="rotate(28 700 300)">
+        <rect x="300" y="-200" width="60" height="900" fill="url(#gH)"/>
+        <rect x="420" y="-200" width="45" height="900" fill="url(#gU)"/>
+        <rect x="520" y="-200" width="70" height="900" fill="url(#gH)"/>
+        <rect x="640" y="-200" width="40" height="900" fill="url(#gV)"/>
+        <rect x="740" y="-200" width="55" height="900" fill="url(#gU)"/>
+        <rect x="860" y="-200" width="65" height="900" fill="url(#gH)"/>
+        <rect x="980" y="-200" width="40" height="900" fill="url(#gV)"/>
+        <rect x="1080" y="-200" width="50" height="900" fill="url(#gU)"/>
+      </g>
+    </svg>
+  </div>
+  <div class="hero-fade"></div>
+
+  <div class="wrap">
+    <span class="eyebrow hero-anim d1">Fact-level review for LLM output</span>
+    <h1 class="hero-anim d2">Your model's answers,<br>double-checked.</h1>
+    <p class="hero-sub hero-anim d3">Veritas scans output from GPT, Claude, Gemini and your own models, checks every factual claim against sources, and grades it before your users ever see it.</p>
+    <div class="hero-actions hero-anim d4">
+      <a class="btn-primary" href="#signin">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a1 1 0 011 1v9.586l2.293-2.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L11 12.586V3a1 1 0 011-1zM5 20a1 1 0 011-1h12a1 1 0 110 2H6a1 1 0 01-1-1z"/></svg>
+        Run a free scan
+      </a>
+      <a class="btn-secondary" href="#method">View a sample report</a>
+    </div>
+    <div class="hero-meta hero-anim d5">
+      <span>v1.0</span> · <span>Works with GPT, Claude, Gemini</span> · <span>API available</span>
+    </div>
+
+    <div class="manuscript hero-anim d6">
+      <div class="scanline"></div>
+      <div class="manuscript-head">
+        <span><span class="dot"></span>model output — gpt-4.1</span>
+        <span>scan complete</span>
+      </div>
+      <div class="m-body" id="manuscript-body">
+        <span class="claim v" data-delay="200">Mount Everest stands 8,849 meters above sea level<span class="tag">verified</span></span>, making it the tallest mountain measured from sea level. <span class="claim h" data-delay="900">It was first summited in 1962 by a joint Nepali-French expedition<span class="tag">hallucinated</span></span> — the first confirmed ascent was actually in 1953. <span class="claim u" data-delay="1600">The mountain grows roughly 4mm taller every year<span class="tag">uncertain</span></span> due to tectonic activity, a figure that varies across surveys.
+      </div>
+      <div class="m-footer">
+        <span><i class="swatch" style="background:var(--verified)"></i>1 verified</span>
+        <span><i class="swatch" style="background:var(--uncertain)"></i>1 uncertain</span>
+        <span><i class="swatch" style="background:var(--halluc)"></i>1 hallucinated</span>
+      </div>
+    </div>
+
+    <div class="hero-foot hero-anim d7">Veritas for Slack <a href="#">Join waitlist →</a></div>
+  </div>
+</header>
+
+<section id="verdicts">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">The three verdicts</span>
+      <h2>No single score — a verdict per claim</h2>
+      <p>Veritas breaks output into individual factual claims and grades each one on its own, instead of one confidence number for a whole response.</p>
+    </div>
+    <div class="verdicts reveal-stagger">
+      <div class="verdict-card v">
+        <span class="mono">01 — Verified</span>
+        <h3>Backed by a source</h3>
+        <p>The claim matches at least one retrieved, citable source with no material contradiction. Safe to ship as-is.</p>
+      </div>
+      <div class="verdict-card u">
+        <span class="mono">02 — Uncertain</span>
+        <h3>No confident source</h3>
+        <p>Sources disagree, are outdated, or don't exist for this claim. Flagged for human review before it reaches a user.</p>
+      </div>
+      <div class="verdict-card h">
+        <span class="mono">03 — Hallucinated</span>
+        <h3>Contradicted or invented</h3>
+        <p>The claim is fabricated or directly conflicts with reliable sources. Blocked by default in production mode.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="method">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">Method</span>
+      <h2>From raw output to a graded transcript</h2>
+      <p>Three steps, no configuration required to start.</p>
+    </div>
+    <div class="how reveal-stagger">
+      <div class="how-step">
+        <span class="num">01</span>
+        <h3>Send the response</h3>
+        <p>Paste text, upload a transcript, or connect via API — Veritas works with output from any model, including your own fine-tunes.</p>
+      </div>
+      <div class="how-step">
+        <span class="num">02</span>
+        <h3>Claims get isolated</h3>
+        <p>Each factual statement is extracted on its own, separated from opinion, instruction, and filler language.</p>
+      </div>
+      <div class="how-step">
+        <span class="num">03</span>
+        <h3>Every claim is checked</h3>
+        <p>Claims are checked against live and cached sources and returned with a verdict, a confidence figure, and the source used.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="signin" style="padding-top:10px;">
+  <div class="signin-section reveal">
+    <div class="signin-inner">
+      <div class="signin-copy">
+        <span class="eyebrow">Get started</span>
+        <h2>Start grading your model's answers today</h2>
+        <p>Free for your first 500 claims a month. No credit card, no source code required to connect.</p>
+        <ul>
+          <li><span class="checkmark"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-6" stroke="#08080B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Real-time claim scoring</li>
+          <li><span class="checkmark"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-6" stroke="#08080B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Works with any model or provider</li>
+          <li><span class="checkmark"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-6" stroke="#08080B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Source-backed, not just a confidence guess</li>
+        </ul>
+      </div>
+
+      <div class="signin-card">
+        <h3>Welcome to Veritas</h3>
+        <p class="sub">Create an account to run your first scan.</p>
+        <form onsubmit="return false;">
+          <div class="field">
+            <label for="name">Name</label>
+            <input id="name" type="text" placeholder="Ada Lovelace">
+          </div>
+          <div class="field">
+            <label for="email">Work email</label>
+            <input id="email" type="email" placeholder="ada@yourcompany.com">
+          </div>
+          <label class="terms">
+            <input type="checkbox">
+            <span>I agree to the Terms of Service and Privacy Policy.</span>
+          </label>
+          <div class="submit-row">
+            <span class="signin-alt">Already have an account? <a href="#">Log in</a></span>
+            <button class="arrow-btn" aria-label="Submit">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap footer-inner">
+    <span>© 2026 Veritas. Fact-level review for LLM output.</span>
+    <span>Method · Verdicts · Pricing · Docs</span>
+  </div>
+</footer>
+
+<script>
+  function runAnnotationCycle(){
+    const claims = document.querySelectorAll('#manuscript-body .claim');
+    claims.forEach(c => c.classList.remove('on'));
+    claims.forEach(c => {
+      const delay = parseInt(c.getAttribute('data-delay'), 10) || 0;
+      setTimeout(() => c.classList.add('on'), delay);
+    });
+  }
+  runAnnotationCycle();
+  setInterval(runAnnotationCycle, 3600);
+
+  // Scroll-reveal for sections
+  const revealTargets = document.querySelectorAll('.reveal, .reveal-stagger');
+  if ('IntersectionObserver' in window){
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting){
+          entry.target.classList.add('in');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' });
+    revealTargets.forEach(el => io.observe(el));
+  } else {
+    revealTargets.forEach(el => el.classList.add('in'));
+  }
+</script>
+
+</body>
+</html>

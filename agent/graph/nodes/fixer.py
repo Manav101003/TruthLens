@@ -18,7 +18,7 @@ For each problematic claim, you will receive:
 Your job: Rewrite ONLY the factually incorrect parts while preserving the original sentence structure and tone.
 
 Output a JSON array where each element has:
-- "claim_index": the index of the claim
+- "claim_index": the exact number after the # sign in the prompt (e.g., if --- CLAIM #1 ---, use 1)
 - "original_text": the original claim
 - "corrected_text": the factually corrected version
 - "correction_source": which source provided the correct fact
@@ -120,7 +120,7 @@ async def fixer_node(state: dict) -> dict:
         updates.update(log_update)
         fixed_claims = [
             {
-                "claim_index": c["claim_index"],
+                "claim_index": c["claim_index"] + 1,  # Keep 1-based to be parsed below
                 "original_text": c["original_text"],
                 "corrected_text": f"[Unverified] {c['original_text']}",
                 "correction_source": "Unable to auto-correct",
@@ -131,7 +131,9 @@ async def fixer_node(state: dict) -> dict:
 
     # Log each fix
     for fc in fixed_claims:
-        idx = fc.get("claim_index", 0)
+        raw_idx = fc.get("claim_index", 1)
+        idx = (raw_idx - 1) if raw_idx >= 1 else 0
+        fc["claim_index"] = idx
         original = fc.get("original_text", "")[:60]
         corrected = fc.get("corrected_text", "")[:60]
         log_update = _log({**state, **updates}, "fixer",

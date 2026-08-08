@@ -4,21 +4,21 @@ const STATUS_CONFIG = {
   verified: {
     label: 'Verified',
     badgeClass: 'badge-verified',
-    barColor: '#27AE60',
+    barColor: '#3FA672',
     icon: '✓',
     bgClass: 'border-green-500/20 hover:border-green-500/40'
   },
   unverified: {
     label: 'Unverified',
     badgeClass: 'badge-unverified',
-    barColor: '#F39C12',
+    barColor: '#D9A441',
     icon: '?',
     bgClass: 'border-amber-500/20 hover:border-amber-500/40'
   },
   hallucinated: {
     label: 'Hallucinated',
     badgeClass: 'badge-hallucinated',
-    barColor: '#C0392B',
+    barColor: '#E15B5E',
     icon: '✗',
     bgClass: 'border-red-500/20 hover:border-red-500/40'
   },

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 
 function getScoreColor(score) {
-  if (score >= 70) return { stroke: '#27AE60', text: 'text-green-400', bg: 'from-green-500/10 to-green-600/5', label: 'Reliable' };
-  if (score >= 40) return { stroke: '#F39C12', text: 'text-amber-400', bg: 'from-amber-500/10 to-amber-600/5', label: 'Uncertain' };
-  return { stroke: '#C0392B', text: 'text-red-400', bg: 'from-red-500/10 to-red-600/5', label: 'Unreliable' };
+  if (score >= 70) return { stroke: '#3FA672', text: 'text-green-400', bg: 'from-green-500/10 to-green-600/5', label: 'Reliable' };
+  if (score >= 40) return { stroke: '#D9A441', text: 'text-amber-400', bg: 'from-amber-500/10 to-amber-600/5', label: 'Uncertain' };
+  return { stroke: '#E15B5E', text: 'text-red-400', bg: 'from-red-500/10 to-red-600/5', label: 'Unreliable' };
 }
 
 export default function SummaryCard({ summary }) {

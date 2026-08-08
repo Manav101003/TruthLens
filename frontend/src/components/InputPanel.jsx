@@ -8,8 +8,8 @@ const MIN_WORDS = 10;
 const ACCEPTED_TYPES = '.pdf,.docx,.doc,.txt,.md,.rtf';
 const ACCEPTED_EXTENSIONS = ['pdf', 'docx', 'doc', 'txt', 'md', 'rtf'];
 
-export default function InputPanel({ onAnalyze, isLoading, onClear }) {
-  const [text, setText] = useState('');
+export default function InputPanel({ onAnalyze, isLoading, onClear, initialText = '' }) {
+  const [text, setText] = useState(initialText);
   const [error, setError] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -17,6 +17,11 @@ export default function InputPanel({ onAnalyze, isLoading, onClear }) {
   const [referenceDocumentText, setReferenceDocumentText] = useState('');
   const [userTier, setUserTier] = useState('enterprise');
   const fileInputRef = useRef(null);
+
+  // Sync state when initialText changes from parent
+  React.useEffect(() => {
+    setText(initialText);
+  }, [initialText]);
 
   const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
   const remainingWords = MAX_WORDS - wordCount;

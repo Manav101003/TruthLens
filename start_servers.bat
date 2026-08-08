@@ -1,0 +1,13 @@
+@echo off
+echo Starting TruthLens Services...
+
+echo Starting Backend on port 5000...
+start cmd /k "cd backend && npm install && npm start"
+
+echo Starting Python Agent on port 8000...
+start cmd /k "cd agent && pip install -r requirements.txt && python main.py"
+
+echo Starting Frontend on port 5173...
+start cmd /k "cd frontend && npm install && npm run dev"
+
+echo All services are starting up in separate windows!

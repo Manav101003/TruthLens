@@ -25,7 +25,7 @@ REASONING REQUIREMENTS:
 - NEVER mark a claim as hallucinated simply because "no evidence was found." That is INCONCLUSIVE.
 
 Output a JSON ARRAY where each element has:
-- "claim_index": number
+- "claim_index": number (1-based index corresponding to CLAIM #)
 - "status": "verified" | "inconclusive" | "hallucinated"
 - "confidence": float 0.0-1.0
 - "reasoning": 2-3 sentences explaining your verdict with specific source references
@@ -142,7 +142,7 @@ async def auditor_node(state: dict) -> dict:
                 if existing_status == "non_verifiable":
                     continue  # Skip non-verifiable
                 all_verdicts.append({
-                    "claim_index": claim.get("id", 0) - 1,
+                    "claim_index": claim.get("id", 0),
                     "status": "inconclusive",
                     "confidence": 0.45,
                     "reasoning": "LLM response parsing failed — claim needs manual review.",
@@ -158,7 +158,7 @@ async def auditor_node(state: dict) -> dict:
                 if existing_status == "non_verifiable":
                     continue
                 all_verdicts.append({
-                    "claim_index": claim.get("id", 0) - 1,
+                    "claim_index": claim.get("id", 0),
                     "status": "inconclusive",
                     "confidence": 0.45,
                     "reasoning": f"LLM unavailable ({str(e)[:40]}) — claim needs manual review.",
@@ -175,7 +175,8 @@ async def auditor_node(state: dict) -> dict:
     status_emoji = {"verified": "🟢", "inconclusive": "🟡", "hallucinated": "🔴"}
 
     for verdict in verdicts:
-        idx = verdict.get("claim_index", 0)
+        raw_idx = verdict.get("claim_index", 1)
+        idx = (raw_idx - 1) if raw_idx >= 1 else 0
         status = verdict.get("status", "inconclusive")
         confidence = verdict.get("confidence", 0)
         reasoning = verdict.get("reasoning", "")

@@ -73,37 +73,56 @@ function detectFactualContradiction(claimText, claimEntities, wikiExtract) {
   const claimLower = claimText.toLowerCase();
   const extractLower = wikiExtract.toLowerCase();
 
-  // Location contradiction patterns
-  // If the claim mentions "located in X" and Wikipedia mentions a different location
+  // 1. Capital/Country relationship check (highly specific)
+  const capitalPattern = /capital\s+of\s+(?:the\s+)?([a-z0-9'-]+)/i;
+  const claimCapitalMatch = claimText.match(capitalPattern);
+  if (claimCapitalMatch) {
+    const claimedCapitalOf = claimCapitalMatch[1].toLowerCase();
+    if (!['the', 'a', 'an', 'this', 'that'].includes(claimedCapitalOf)) {
+      // Find actual capital info in Wikipedia extract
+      const wikiCapitalMatches = [...wikiExtract.matchAll(/capital\s+of\s+(?:the\s+)?([a-z0-9'-]+)/gi)];
+      for (const wm of wikiCapitalMatches) {
+        const actualCapitalOf = wm[1].toLowerCase();
+        if (['the', 'a', 'an', 'this', 'that'].includes(actualCapitalOf)) continue;
+
+        // If they differ, and Wikipedia does not mention the claimed location
+        if (claimedCapitalOf !== actualCapitalOf && !extractLower.includes(claimedCapitalOf)) {
+          return true;
+        }
+      }
+    }
+  }
+
+  // 2. General Location patterns (located in, based in, in)
   const locationPatterns = [
-    /located\s+in\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i,
-    /in\s+([A-Z][a-z]+(?:,\s*[A-Z][a-z]+)*)/i,
-    /capital\s+of\s+([A-Z][a-z]+)/i
+    /located\s+in\s+(?:the\s+)?([a-z0-9'-]+)/i,
+    /based\s+in\s+(?:the\s+)?([a-z0-9'-]+)/i,
+    /\bin\s+(?:the\s+)?([a-z0-9'-]+)\b/i
   ];
 
   for (const pattern of locationPatterns) {
     const claimMatch = claimText.match(pattern);
     if (claimMatch) {
       const claimedLocation = claimMatch[1].toLowerCase();
-      // Check if Wikipedia mentions a DIFFERENT location for the same entity
-      // e.g., claim says Berlin but Wiki says Paris
-      const majorCities = ['paris', 'london', 'berlin', 'rome', 'tokyo', 'new york', 'washington', 'moscow', 'beijing', 'sydney', 'mumbai', 'cairo', 'delhi'];
-      const majorCountries = ['france', 'germany', 'italy', 'japan', 'china', 'india', 'australia', 'united states', 'united kingdom', 'russia', 'brazil', 'egypt'];
-      const allLocations = [...majorCities, ...majorCountries];
+      // Skip common articles/fillers
+      if (['the', 'a', 'an', 'this', 'that', 'which', 'its', 'their', 'some', 'and', 'or'].includes(claimedLocation)) continue;
 
-      for (const location of allLocations) {
-        // If Wikipedia mentions a location that's different from the claimed one
-        if (extractLower.includes(location) && !claimLower.includes(location)) {
-          // And the claimed location is NOT in the Wikipedia extract
-          if (!extractLower.includes(claimedLocation)) {
-            return true;
-          }
+      // Find actual locations in Wikipedia extract using the same patterns
+      const wikiMatches = [...wikiExtract.matchAll(new RegExp(pattern.source, 'gi'))];
+      for (const wm of wikiMatches) {
+        const actualLocation = wm[1].toLowerCase();
+        if (['the', 'a', 'an', 'this', 'that', 'which', 'its', 'their', 'some', 'and', 'or'].includes(actualLocation)) continue;
+
+        // If the Wikipedia extract mentions a different location under the same pattern
+        // and does NOT mention the claimed location anywhere in the text
+        if (claimedLocation !== actualLocation && !extractLower.includes(claimedLocation)) {
+          return true;
         }
       }
     }
   }
 
-  // Population/quantity contradiction — large magnitude differences
+  // 3. Population/quantity contradiction — large magnitude differences
   const populationMatch = claimText.match(/(\d[\d,.]*)\s*(million|billion|trillion)/i);
   if (populationMatch) {
     const claimedNum = parseFloat(populationMatch[1].replace(/,/g, ''));
